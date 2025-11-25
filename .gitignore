@@ -1,3 +1,4 @@
 # Git ignore file - specifies files to exclude from version control
 # Excludes virtual environments, IDE files, database files, logs, and sensitive configuration
 # Prevents committing unnecessary or sensitive files to the repository
+.env
