@@ -9,8 +9,8 @@ function Login({ onLogin }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  // Registration form state
-  const [registerForm, setRegisterForm] = useState({
+  // Registration form state - different forms for each role
+  const [memberForm, setMemberForm] = useState({
     name: '',
     email: '',
     date_of_birth: '',
@@ -18,35 +18,79 @@ function Login({ onLogin }) {
     phone: ''
   })
 
+  const [trainerForm, setTrainerForm] = useState({
+    name: '',
+    email: '',
+    specialization: '',
+    phone: ''
+  })
+
+  const [adminForm, setAdminForm] = useState({
+    name: '',
+    email: '',
+    role: ''
+  })
+
   const handleRoleSelect = (role) => {
     setSelectedRole(role)
     setIsRegistering(false)
     setError('')
     setSuccess('')
-    // Only allow registration for members
-    if (role === 'member') {
-      setIsRegistering(true)
-    }
+    // Auto-show registration for all roles
+    setIsRegistering(true)
   }
 
   const handleRegister = async (e) => {
     e.preventDefault()
-    if (!registerForm.name || !registerForm.email) {
-      setError('Name and email are required')
-      return
-    }
-
     setLoading(true)
     setError('')
     setSuccess('')
 
     try {
-      const response = await memberAPI.create(registerForm)
-      if (response.data) {
-        setSuccess(`Member created successfully! Your ID is ${response.data.member_id}`)
+      let response
+      let idField
+      let roleName
+
+      switch (selectedRole) {
+        case 'member':
+          if (!memberForm.name || !memberForm.email) {
+            setError('Name and email are required')
+            setLoading(false)
+            return
+          }
+          response = await memberAPI.create(memberForm)
+          idField = 'member_id'
+          roleName = 'Member'
+          break
+        case 'trainer':
+          if (!trainerForm.name || !trainerForm.email) {
+            setError('Name and email are required')
+            setLoading(false)
+            return
+          }
+          response = await trainerAPI.create(trainerForm)
+          idField = 'trainer_id'
+          roleName = 'Trainer'
+          break
+        case 'admin':
+          if (!adminForm.name || !adminForm.email) {
+            setError('Name and email are required')
+            setLoading(false)
+            return
+          }
+          response = await adminAPI.create(adminForm)
+          idField = 'admin_id'
+          roleName = 'Admin'
+          break
+        default:
+          throw new Error('Invalid role')
+      }
+
+      if (response.data && response.data[idField]) {
+        setSuccess(`${roleName} created successfully! Your ID is ${response.data[idField]}`)
         // Auto-login after registration
         setTimeout(() => {
-          onLogin('member', response.data.member_id)
+          onLogin(selectedRole, response.data[idField])
         }, 1500)
       }
     } catch (err) {
@@ -134,58 +178,142 @@ function Login({ onLogin }) {
           </div>
         </div>
 
-        {selectedRole === 'member' && isRegistering ? (
+        {selectedRole && isRegistering ? (
           <form onSubmit={handleRegister}>
-            <h3 style={{ color: '#008080', marginBottom: '15px' }}>Register as Member</h3>
-            <div className="form-group">
-              <label>Name *</label>
-              <input
-                type="text"
-                value={registerForm.name}
-                onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Email *</label>
-              <input
-                type="email"
-                value={registerForm.email}
-                onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                required
-              />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-              <div className="form-group">
-                <label>Date of Birth</label>
-                <input
-                  type="date"
-                  value={registerForm.date_of_birth}
-                  onChange={(e) => setRegisterForm({ ...registerForm, date_of_birth: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Gender</label>
-                <select
-                  value={registerForm.gender}
-                  onChange={(e) => setRegisterForm({ ...registerForm, gender: e.target.value })}
-                >
-                  <option value="">Select...</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Phone</label>
-              <input
-                type="tel"
-                value={registerForm.phone}
-                onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-                placeholder="(optional)"
-              />
-            </div>
+            <h3 style={{ color: '#008080', marginBottom: '15px' }}>
+              Register as {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
+            </h3>
+
+            {/* Member Registration Form */}
+            {selectedRole === 'member' && (
+              <>
+                <div className="form-group">
+                  <label>Name *</label>
+                  <input
+                    type="text"
+                    value={memberForm.name}
+                    onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={memberForm.email}
+                    onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  <div className="form-group">
+                    <label>Date of Birth</label>
+                    <input
+                      type="date"
+                      value={memberForm.date_of_birth}
+                      onChange={(e) => setMemberForm({ ...memberForm, date_of_birth: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Gender</label>
+                    <select
+                      value={memberForm.gender}
+                      onChange={(e) => setMemberForm({ ...memberForm, gender: e.target.value })}
+                    >
+                      <option value="">Select...</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input
+                    type="tel"
+                    value={memberForm.phone}
+                    onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
+                    placeholder="(optional)"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Trainer Registration Form */}
+            {selectedRole === 'trainer' && (
+              <>
+                <div className="form-group">
+                  <label>Name *</label>
+                  <input
+                    type="text"
+                    value={trainerForm.name}
+                    onChange={(e) => setTrainerForm({ ...trainerForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={trainerForm.email}
+                    onChange={(e) => setTrainerForm({ ...trainerForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Specialization</label>
+                  <input
+                    type="text"
+                    value={trainerForm.specialization}
+                    onChange={(e) => setTrainerForm({ ...trainerForm, specialization: e.target.value })}
+                    placeholder="e.g., Yoga, Strength Training (optional)"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input
+                    type="tel"
+                    value={trainerForm.phone}
+                    onChange={(e) => setTrainerForm({ ...trainerForm, phone: e.target.value })}
+                    placeholder="(optional)"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Admin Registration Form */}
+            {selectedRole === 'admin' && (
+              <>
+                <div className="form-group">
+                  <label>Name *</label>
+                  <input
+                    type="text"
+                    value={adminForm.name}
+                    onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={adminForm.email}
+                    onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Role</label>
+                  <input
+                    type="text"
+                    value={adminForm.role}
+                    onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}
+                    placeholder="e.g., Manager, Staff (optional)"
+                  />
+                </div>
+              </>
+            )}
+
             {error && <div className="alert alert-error">{error}</div>}
             {success && <div className="alert alert-success">{success}</div>}
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
@@ -221,16 +349,14 @@ function Login({ onLogin }) {
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
               />
             </div>
-            {selectedRole === 'member' && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setIsRegistering(true)}
-                style={{ width: '100%', marginBottom: '10px' }}
-              >
-                New Member? Register Here
-              </button>
-            )}
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setIsRegistering(true)}
+              style={{ width: '100%', marginBottom: '10px' }}
+            >
+              New {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}? Register Here
+            </button>
             {error && <div className="alert alert-error">{error}</div>}
             {success && <div className="alert alert-success">{success}</div>}
             <button
@@ -246,9 +372,7 @@ function Login({ onLogin }) {
 
         {selectedRole && !isRegistering && (
           <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: '#666' }}>
-            {selectedRole === 'member' 
-              ? 'New members can register above. Existing members can login with their ID.'
-              : 'Use Swagger docs to create users first, then login with their IDs'}
+            New {selectedRole}s can register above. Existing {selectedRole}s can login with their ID.
           </p>
         )}
       </div>
