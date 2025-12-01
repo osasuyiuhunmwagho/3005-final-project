@@ -8,12 +8,12 @@ from sqlalchemy import Column, Integer, ForeignKey, DateTime
 from core.database import Base
 
 class TrainerAvailability(Base):
-    __tablename__ = "TrainerAvailability"
+    __tablename__ = "traineravailability"
 
     availability_id = Column(Integer, primary_key=True, index=True)
 
     # Connect availability to a trainer
-    trainer_id = Column(Integer, ForeignKey("Trainer.trainer_id"), nullable=False)
+    trainer_id = Column(Integer, ForeignKey("trainer.trainer_id"), nullable=False)
 
     # Availability time window
     start_time = Column(DateTime, nullable=False)

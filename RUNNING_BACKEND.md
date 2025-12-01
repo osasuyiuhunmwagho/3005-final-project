@@ -204,3 +204,4 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 **Note**: If your `main.py` file is empty or incomplete, you'll need to set up the basic FastAPI app structure first. The server won't start without a valid FastAPI application instance.
 
+

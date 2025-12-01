@@ -3,3 +3,8 @@
 # Prevents committing unnecessary or sensitive files to the repository
 .env
 __pycache__
+venv/
+.venv/
+*.pyc
+.idea/
+.vscode/
