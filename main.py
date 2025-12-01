@@ -6,6 +6,9 @@ Coordinates all application components and serves as the entry point for running
 
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from core.database import Base, engine
+from model import *
+Base.metadata.create_all(bind=engine)
 
 # Import models to ensure they're registered with SQLAlchemy Base
 import model  # This imports all models from model/__init__.py

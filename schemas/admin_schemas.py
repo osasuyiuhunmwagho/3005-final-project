@@ -134,6 +134,7 @@ class GroupClassCreate(BaseModel):
     class_name: str
     trainer_id: int
     room_id: int
+    admin_id: int
     start_time: datetime
     end_time: datetime
     capacity: int
