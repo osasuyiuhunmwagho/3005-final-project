@@ -19,8 +19,8 @@ class AdminStaff(Base):
 
     #Relationships 
     #1 admind creates N maintenance records
-    maintenance_records = relationship("MaintenanceRecord", back_populates="admin") 
+    maintenance_records = relationship("MaintenanceRecord", back_populates="admin", cascade="all, delete-orphan") 
     #1 admin manages N rooms
-    rooms = relationship("Room", back_populates="admin")
+    rooms = relationship("Room", back_populates="admin", cascade="all, delete-orphan")
     #1 admin schedules N group classes
-    group_classes = relationship("GroupClass", back_populates="admin")
+    group_classes = relationship("GroupClass", back_populates="admin", cascade="all, delete-orphan")

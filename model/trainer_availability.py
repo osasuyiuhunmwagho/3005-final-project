@@ -5,6 +5,7 @@ Prevents scheduling conflicts by defining available time slots.
 """
 
 from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
 from core.database import Base
 
 class TrainerAvailability(Base):
@@ -18,3 +19,6 @@ class TrainerAvailability(Base):
     # Availability time window
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=False)
+
+    # Relationships
+    trainer = relationship("Trainer", back_populates="availabilities")

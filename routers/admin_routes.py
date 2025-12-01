@@ -34,13 +34,10 @@ def create_admin(admin: AdminCreate, db: Session = Depends(get_db)):
     
     return admin_repository.create_admin(db, admin.name, admin.email, admin.role)
 
-@router.get("/{admin_id}", response_model=AdminResponse)
-def get_admin(admin_id: int, db: Session = Depends(get_db)):
-    """Get admin by ID"""
-    admin = admin_repository.get_admin_by_id(db, admin_id)
-    if not admin:
-        raise HTTPException(status_code=404, detail="Admin not found")
-    return admin
+@router.get("/", response_model=List[AdminResponse])
+def get_all_admins(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Get all admins with pagination"""
+    return admin_repository.get_all_admins(db, skip, limit)
 
 @router.get("/email/{email}", response_model=AdminResponse)
 def get_admin_by_email(email: str, db: Session = Depends(get_db)):
@@ -50,12 +47,15 @@ def get_admin_by_email(email: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Admin not found")
     return admin
 
-@router.get("/", response_model=List[AdminResponse])
-def get_all_admins(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Get all admins with pagination"""
-    return admin_repository.get_all_admins(db, skip, limit)
+@router.get("/by-id/{admin_id}", response_model=AdminResponse)
+def get_admin(admin_id: int, db: Session = Depends(get_db)):
+    """Get admin by ID"""
+    admin = admin_repository.get_admin_by_id(db, admin_id)
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin not found")
+    return admin
 
-@router.put("/{admin_id}", response_model=AdminResponse)
+@router.put("/by-id/{admin_id}", response_model=AdminResponse)
 def update_admin(admin_id: int, admin_update: AdminUpdate, db: Session = Depends(get_db)):
     """Update admin information"""
     #Check if email is being changed & verify uniqueness
@@ -74,7 +74,7 @@ def update_admin(admin_id: int, admin_update: AdminUpdate, db: Session = Depends
         raise HTTPException(status_code=404, detail="Admin not found")
     return updated
 
-@router.delete("/{admin_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/by-id/{admin_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_admin(admin_id: int, db: Session = Depends(get_db)):
     """Delete an admin"""
     success = admin_repository.delete_admin(db, admin_id)
@@ -91,14 +91,6 @@ def create_room(room: RoomCreate, db: Session = Depends(get_db)):
         db, room.room_name, room.capacity, room.location, room.admin_id
     )
 
-@router.get("/rooms/{room_id}", response_model=RoomResponse)
-def get_room(room_id: int, db: Session = Depends(get_db)):
-    """Get room by ID"""
-    room = room_repository.get_room_by_id(db, room_id)
-    if not room:
-        raise HTTPException(status_code=404, detail="Room not found")
-    return room
-
 @router.get("/rooms", response_model=List[RoomResponse])
 def get_all_rooms(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get all rooms"""
@@ -108,6 +100,14 @@ def get_all_rooms(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 def get_rooms_by_capacity(min_capacity: int, db: Session = Depends(get_db)):
     """Get rooms with at least the specified capacity"""
     return room_repository.get_rooms_by_capacity(db, min_capacity)
+
+@router.get("/rooms/{room_id}", response_model=RoomResponse)
+def get_room(room_id: int, db: Session = Depends(get_db)):
+    """Get room by ID"""
+    room = room_repository.get_room_by_id(db, room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return room
 
 @router.put("/rooms/{room_id}", response_model=RoomResponse)
 def update_room(room_id: int, room_update: RoomUpdate, db: Session = Depends(get_db)):
@@ -139,14 +139,6 @@ def create_equipment(equipment: EquipmentCreate, db: Session = Depends(get_db)):
         db, equipment.room_id, equipment.name, equipment.status
     )
 
-@router.get("/equipment/{equipment_id}", response_model=EquipmentResponse)
-def get_equipment(equipment_id: int, db: Session = Depends(get_db)):
-    """Get equipment by ID"""
-    equipment = equipment_repository.get_equipment_by_id(db, equipment_id)
-    if not equipment:
-        raise HTTPException(status_code=404, detail="Equipment not found")
-    return equipment
-
 @router.get("/equipment", response_model=List[EquipmentResponse])
 def get_all_equipment(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get all equipment"""
@@ -161,6 +153,14 @@ def get_equipment_by_room(room_id: int, db: Session = Depends(get_db)):
 def get_equipment_by_status(status: str, db: Session = Depends(get_db)):
     """Get equipment by status (working, broken, in_repair)"""
     return equipment_repository.get_equipment_by_status(db, status)
+
+@router.get("/equipment/{equipment_id}", response_model=EquipmentResponse)
+def get_equipment(equipment_id: int, db: Session = Depends(get_db)):
+    """Get equipment by ID"""
+    equipment = equipment_repository.get_equipment_by_id(db, equipment_id)
+    if not equipment:
+        raise HTTPException(status_code=404, detail="Equipment not found")
+    return equipment
 
 @router.put("/equipment/{equipment_id}", response_model=EquipmentResponse)
 def update_equipment(equipment_id: int, equipment_update: EquipmentUpdate, db: Session = Depends(get_db)):
@@ -195,6 +195,29 @@ def report_equipment_issue(maintenance: MaintenanceCreate, db: Session = Depends
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
+@router.get("/maintenance", response_model=List[MaintenanceResponse])
+def get_all_maintenance(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Get all maintenance records"""
+    return maintenance_repository.get_all_maintenance_records(db, skip, limit)
+
+@router.get("/maintenance/equipment/{equipment_id}", response_model=List[MaintenanceResponse])
+def get_maintenance_by_equipment(equipment_id: int, db: Session = Depends(get_db)):
+    """Get all maintenance records for specific equipment"""
+    return maintenance_repository.get_maintenance_by_equipment(db, equipment_id)
+
+@router.get("/maintenance/status/{status}", response_model=List[MaintenanceResponse])
+def get_maintenance_by_status(status: str, db: Session = Depends(get_db)):
+    """Get maintenance records by status (open, in_progress, resolved)"""
+    return maintenance_repository.get_maintenance_by_status(db, status)
+
+@router.get("/maintenance/{maintenance_id}", response_model=MaintenanceResponse)
+def get_maintenance_record(maintenance_id: int, db: Session = Depends(get_db)):
+    """Get maintenance record by ID"""
+    record = maintenance_repository.get_maintenance_record_by_id(db, maintenance_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Maintenance record not found")
+    return record
+
 @router.put("/maintenance/{maintenance_id}/resolve")
 def resolve_maintenance(maintenance_id: int, db: Session = Depends(get_db)):
     """Mark maintenance issue as resolved"""
@@ -215,29 +238,6 @@ def update_maintenance_status(maintenance_id: int, maintenance_update: Maintenan
     if not updated:
         raise HTTPException(status_code=404, detail="Maintenance record not found")
     return updated
-
-@router.get("/maintenance/{maintenance_id}", response_model=MaintenanceResponse)
-def get_maintenance_record(maintenance_id: int, db: Session = Depends(get_db)):
-    """Get maintenance record by ID"""
-    record = maintenance_repository.get_maintenance_record_by_id(db, maintenance_id)
-    if not record:
-        raise HTTPException(status_code=404, detail="Maintenance record not found")
-    return record
-
-@router.get("/maintenance", response_model=List[MaintenanceResponse])
-def get_all_maintenance(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Get all maintenance records"""
-    return maintenance_repository.get_all_maintenance_records(db, skip, limit)
-
-@router.get("/maintenance/equipment/{equipment_id}", response_model=List[MaintenanceResponse])
-def get_maintenance_by_equipment(equipment_id: int, db: Session = Depends(get_db)):
-    """Get all maintenance records for specific equipment"""
-    return maintenance_repository.get_maintenance_by_equipment(db, equipment_id)
-
-@router.get("/maintenance/status/{status}", response_model=List[MaintenanceResponse])
-def get_maintenance_by_status(status: str, db: Session = Depends(get_db)):
-    """Get maintenance records by status (open, in_progress, resolved)"""
-    return maintenance_repository.get_maintenance_by_status(db, status)
 
 @router.delete("/maintenance/{maintenance_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_maintenance_record(maintenance_id: int, db: Session = Depends(get_db)):

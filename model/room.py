@@ -14,17 +14,17 @@ class Room(Base):
     
     #Attributes
     room_id = Column(Integer, primary_key=True, autoincrement=True)
-    admin_id = Column(Integer, ForeignKey('adminstaff.admin_id'))  #FK to admin
     room_name = Column(String(100), nullable=False)
-    capacity = Column(Integer, nullable=False)
-    location = Column(String(100), nullable=False)
+    location = Column(String(100), nullable=True)  # Can be NULL per DB schema
+    capacity = Column(Integer, nullable=True)  # Can be NULL per DB schema
+    admin_id = Column(Integer, ForeignKey('adminstaff.admin_id'), nullable=True)  #FK to admin
 
     #Relationships
     #N rooms belong to 1 admin
     admin = relationship("AdminStaff", back_populates="rooms")
     #1 room contains N equipment
-    equipment = relationship("Equipment", back_populates="room")
+    equipment = relationship("Equipment", back_populates="room", cascade="all, delete-orphan")
     #1 room hosts N group classes
-    group_classes = relationship("GroupClass", back_populates="room")
+    group_classes = relationship("GroupClass", back_populates="room", cascade="all, delete-orphan")
     #1 room hosts N personal training sessions
-    personal_training_sessions = relationship("PersonalTrainingSession", back_populates="room")
+    personal_training_sessions = relationship("PersonalTrainingSession", back_populates="room", cascade="all, delete-orphan")

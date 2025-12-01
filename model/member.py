@@ -21,5 +21,7 @@ class Member(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    class_registrations = relationship("ClassRegistration", back_populates="member")
-    fitness_goals = relationship("FitnessGoal", back_populates="member")
+    class_registrations = relationship("ClassRegistration", back_populates="member", cascade="all, delete-orphan")
+    fitness_goals = relationship("FitnessGoal", back_populates="member", cascade="all, delete-orphan")
+    health_metrics = relationship("HealthMetric", back_populates="member", cascade="all, delete-orphan")
+    personal_training_sessions = relationship("PersonalTrainingSession", back_populates="member", cascade="all, delete-orphan")

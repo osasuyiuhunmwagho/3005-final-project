@@ -22,4 +22,4 @@ class Equipment(Base):
     #N equipment belong to 1 room
     room = relationship("Room", back_populates="equipment")
     #1 equipment has N maintenance records
-    maintenance_records = relationship("MaintenanceRecord", back_populates="equipment")
+    maintenance_records = relationship("MaintenanceRecord", back_populates="equipment", cascade="all, delete-orphan")

@@ -45,6 +45,20 @@ def get_room_by_id(db: Session, room_id: int) -> Optional[Room]:
     room = db.query(Room).filter(Room.room_id == room_id).first()
     return room
 
+def get_all_rooms(db: Session, skip: int = 0, limit: int = 100) -> List[Room]:
+    """
+    Get all rooms with pagination
+
+    Parameters :
+        db     : Database session
+        skip   : Number of records to skip
+        limit  : Maximum records to return
+    Returns :
+        rooms  : List of Room objects
+    """
+    rooms = db.query(Room).offset(skip).limit(limit).all()
+    return rooms
+
 def get_rooms_by_capacity(db: Session, min_capacity: int) -> List[Room]:
     """
     Get rooms with at least specified capacity
@@ -58,21 +72,6 @@ def get_rooms_by_capacity(db: Session, min_capacity: int) -> List[Room]:
     #filter through ALL rooms that have a larger than or equal to min capcity
     room = db.query(Room).filter(Room.capacity >= min_capacity).all()
     return room
-
-def get_all_rooms(db: Session, skip: int = 0, limit: int = 100) -> List[Room]:
-    """
-    Get all rooms with pagination
-
-    Parameters :
-        db     : Database session
-        skip   : Num of records to skip
-        limit  : Maximum records to return
-    Returns :
-        rooms  : List of Room objects
-    """
-    #Get every room object
-    rooms = db.query(Room).offset(skip).limit(limit).all()
-    return rooms
 
 def update_room(db: Session, room_id: int, room_name: Optional[str] = None, capacity: Optional[int] = None, location: Optional[str] = None) -> Optional[Room]:
     """

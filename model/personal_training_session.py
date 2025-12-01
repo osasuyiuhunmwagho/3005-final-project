@@ -24,6 +24,8 @@ class PersonalTrainingSession(Base):
     status = Column(String(20), nullable=False)
 
     # Relationships
+    member = relationship("Member", back_populates="personal_training_sessions")
+    trainer = relationship("Trainer", back_populates="personal_training_sessions")
     room = relationship("Room", back_populates="personal_training_sessions")
 
 

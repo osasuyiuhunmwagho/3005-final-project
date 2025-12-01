@@ -27,7 +27,8 @@ class GroupClass(Base):
 
     # Relationships
     admin = relationship("AdminStaff", back_populates="group_classes")
+    trainer = relationship("Trainer", back_populates="group_classes")
     room = relationship("Room", back_populates="group_classes")
-    registrations = relationship("ClassRegistration", back_populates="group_class")
+    registrations = relationship("ClassRegistration", back_populates="group_class", cascade="all, delete-orphan")
 
 

@@ -1,5 +1,5 @@
 -- MEMBER
-CREATE TABLE IF NOT EXISTS Member (
+CREATE TABLE IF NOT EXISTS member (
     member_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS Member (
 );
 
 -- TRAINER
-CREATE TABLE IF NOT EXISTS Trainer (
+CREATE TABLE IF NOT EXISTS trainer (
     trainer_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -18,30 +18,30 @@ CREATE TABLE IF NOT EXISTS Trainer (
     phone VARCHAR(20)
 );
 -- ADMIN STAFF
-CREATE TABLE IF NOT EXISTS AdminStaff (
+CREATE TABLE IF NOT EXISTS adminstaff (
     admin_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     role VARCHAR(50)
 );
 -- ROOM
-CREATE TABLE IF NOT EXISTS Room (
+CREATE TABLE IF NOT EXISTS room (
     room_id SERIAL PRIMARY KEY,
     room_name VARCHAR(100) NOT NULL,
     location VARCHAR(100),
     capacity INT,
-    admin_id INT REFERENCES AdminStaff(admin_id)
+    admin_id INT REFERENCES adminstaff(admin_id)
 ); 
 -- EQUIPMENT
-CREATE TABLE IF NOT EXISTS Equipment (
+CREATE TABLE IF NOT EXISTS equipment (
     equipment_id SERIAL PRIMARY KEY,
-    room_id INT REFERENCES Room(room_id),
+    room_id INT REFERENCES room(room_id),
     name VARCHAR(100) NOT NULL,
     status VARCHAR(20) CHECK (status IN ('working','broken','in_repair'))
 );
 
 -- FITNESS GOAL
-CREATE TABLE IF NOT EXISTS FitnessGoal (
+CREATE TABLE IF NOT EXISTS fitnessgoal (
     goal_id SERIAL PRIMARY KEY,
     member_id INT REFERENCES Member(member_id),
     goal_type VARCHAR(50) NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS FitnessGoal (
     created_at TIMESTAMP DEFAULT NOW()
 );
 -- HEALTH METRICS
-CREATE TABLE IF NOT EXISTS HealthMetric (
+CREATE TABLE IF NOT EXISTS healthmetric (
     metric_id SERIAL PRIMARY KEY,
     member_id INT REFERENCES Member(member_id),
     weight NUMERIC,
@@ -62,46 +62,46 @@ CREATE TABLE IF NOT EXISTS HealthMetric (
 );
 
 -- TRAINER AVAILABILITY
-CREATE TABLE IF NOT EXISTS TrainerAvailability (
+CREATE TABLE IF NOT EXISTS traineravailability (
     availability_id SERIAL PRIMARY KEY,
-    trainer_id INT REFERENCES Trainer(trainer_id),
+    trainer_id INT REFERENCES trainer(trainer_id),
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL
 );
 
 -- GROUP CLASS
-CREATE TABLE IF NOT EXISTS GroupClass (
+CREATE TABLE IF NOT EXISTS groupclass (
     class_id SERIAL PRIMARY KEY,
     class_name VARCHAR(100) NOT NULL,
-    trainer_id INT REFERENCES Trainer(trainer_id),
-    room_id INT REFERENCES Room(room_id),
-    admin_id INT REFERENCES AdminStaff(admin_id),
+    trainer_id INT REFERENCES trainer(trainer_id),
+    room_id INT REFERENCES room(room_id),
+    admin_id INT REFERENCES adminstaff(admin_id),
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
     capacity INT
 );
 -- CLASS REGISTRATION
-CREATE TABLE ClassRegistration (
+CREATE TABLE classregistration (
     registration_id SERIAL PRIMARY KEY,
     member_id INT REFERENCES Member(member_id),
-    class_id INT REFERENCES GroupClass(class_id),
+    class_id INT REFERENCES groupclass(class_id),
     registered_at TIMESTAMP DEFAULT NOW()
 );
 -- PERSONAL TRAINING SESSION
-CREATE TABLE IF NOT EXISTS PersonalTrainingSession (
+CREATE TABLE IF NOT EXISTS personaltrainingSession (
     session_id SERIAL PRIMARY KEY,
     member_id INT REFERENCES Member(member_id),
-    trainer_id INT REFERENCES Trainer(trainer_id),
-    room_id INT REFERENCES Room(room_id),
+    trainer_id INT REFERENCES trainer(trainer_id),
+    room_id INT REFERENCES room(room_id),
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
     status VARCHAR(20) CHECK (status IN ('scheduled','cancelled','completed'))
 );
 -- MAINTENANCE RECORD
-CREATE TABLE IF NOT EXISTS MaintenanceRecord (
+CREATE TABLE IF NOT EXISTS maintenancerecord (
     maintenance_id SERIAL PRIMARY KEY,
-    equipment_id INT REFERENCES Equipment(equipment_id),
-    admin_id INT REFERENCES AdminStaff(admin_id),
+    equipment_id INT REFERENCES equipment(equipment_id),
+    admin_id INT REFERENCES adminstaff(admin_id),
     issue_description TEXT NOT NULL,
     reported_at TIMESTAMP DEFAULT NOW(),
     resolved_at TIMESTAMP,
