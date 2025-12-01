@@ -125,3 +125,26 @@ class MaintenanceResponse(MaintenanceBase):
     
     class Config:
         from_attributes = True
+
+#============================================
+# Group Class Schemas (Your Feature)
+#============================================
+class GroupClassCreate(BaseModel):
+    "Schema for creating a new group class"
+    class_name: str
+    trainer_id: int
+    room_id: int
+    start_time: datetime
+    end_time: datetime
+    capacity: int
+
+#============================================
+# Personal Training Session Schemas (Your Feature)
+#============================================
+class PTScheduleCreate(BaseModel):
+    "Schema for scheduling a personal training session"
+    member_id: int
+    trainer_id: int
+    room_id: int
+    start_time: datetime
+    end_time: datetime

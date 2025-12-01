@@ -12,9 +12,12 @@ from schemas.admin_schemas import (
     AdminCreate, AdminUpdate, AdminResponse,
     RoomCreate, RoomUpdate, RoomResponse,
     EquipmentCreate, EquipmentUpdate, EquipmentResponse,
-    MaintenanceCreate, MaintenanceUpdate, MaintenanceResponse
+    MaintenanceCreate, MaintenanceUpdate, MaintenanceResponse,
+    GroupClassCreate, PTScheduleCreate, 
 )
-from repositories import admin_repository, room_repository, equipment_repository, maintenance_repository
+from repositories import admin_repository, room_repository, equipment_repository, maintenance_repository, group_class_repository, session_repository
+from model.group_class import GroupClass
+from model.personal_training_session import PersonalTrainingSession
 from services import admin_service, class_service, booking_service
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -246,24 +249,51 @@ def delete_maintenance_record(maintenance_id: int, db: Session = Depends(get_db)
 #============================================
 #GROUP CLASS Management
 #============================================
-@router.post("/classes/create")
-def create_group_class(
-    class_name: str,
-    trainer_id: int,
-    room_id: int,
-    admin_id: int,
-    start_time: datetime,
-    end_time: datetime,
-    capacity: int,
-    db: Session = Depends(get_db)
-):
-    """Create a new group class with room availability check"""
-    result = class_service.create_group_class(
-        db, class_name, trainer_id, room_id, admin_id, start_time, end_time, capacity
-    )
-    if not result["success"]:
-        raise HTTPException(status_code=400, detail=result["message"])
-    return result
+@router.post("/classes", status_code=201)
+def create_group_class(data: GroupClassCreate, db: Session = Depends(get_db)):
+    """
+    Creates a new group fitness class.
+    Ensures:
+      - room is not double-booked
+      - trainer is not double-booked
+    """
+
+    # Room conflict check
+    if group_class_repository.room_conflict(db, data.room_id, data.start_time, data.end_time):
+        raise HTTPException(status_code=400, detail="Room is already booked for this time.")
+
+    # Trainer conflict check
+    if group_class_repository.trainer_conflict(db, data.trainer_id, data.start_time, data.end_time):
+        raise HTTPException(status_code=400, detail="Trainer is already teaching another class.")
+
+    # Create & save class
+    new_class = GroupClass(**data.dict())
+    return group_class_repository.create_class(db, new_class)
+
+# ============================================================
+# PERSONAL TRAINING SESSION SCHEDULING
+# ============================================================
+@router.post("/pt-session", status_code=201)
+def schedule_pt_session(data: PTScheduleCreate, db: Session = Depends(get_db)):
+    """
+    Schedules a personal training session.
+    """
+
+    # Trainer must be available
+    if not session_repository.trainer_available(db, data.trainer_id, data.start_time, data.end_time):
+        raise HTTPException(status_code=400, detail="Trainer is not available during this time.")
+
+    # Trainer must not have another PT session
+    if session_repository.trainer_session_conflict(db, data.trainer_id, data.start_time, data.end_time):
+        raise HTTPException(status_code=400, detail="Trainer already has another session at this time.")
+
+    # Room must be free
+    if session_repository.room_conflict(db, data.room_id, data.start_time, data.end_time):
+        raise HTTPException(status_code=400, detail="Room is already booked.")
+
+    # Create session
+    session = PersonalTrainingSession(**data.dict(), status="scheduled")
+    return session_repository.create_session(db, session)
 
 #============================================
 #ROOM Availability Check
