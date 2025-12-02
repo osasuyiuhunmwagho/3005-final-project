@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from core.config import settings
+from app.core.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ def create_tables():
     """Create all tables defined in models."""
     Base.metadata.create_all(bind=engine)
 
-# Function to drop all tables 
+# Function to drop all tables (useful for testing/reset)
 def drop_tables():
     """Drop all tables."""
     Base.metadata.drop_all(bind=engine)

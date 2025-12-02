@@ -7,22 +7,24 @@ Coordinates all application components and serves as the entry point for running
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from core.database import Base, engine
-from model import *
-Base.metadata.create_all(bind=engine)
 
 # Import models to ensure they're registered with SQLAlchemy Base
-import model  # This imports all models from model/__init__.py
+import app.model  # This imports all models from app.model/__init__.py
 
 # Import database utilities
-from core.database import create_tables
+from app.core.database import Base, engine, create_tables
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown events."""
     # Startup: Create tables if they don't exist
-    # Uncomment the line below if you want tables created automatically on startup
-    # create_tables()
+    # This will only run when the app actually starts, not at import time
+    try:
+        create_tables()
+    except Exception as e:
+        # Log error but don't crash - allows app to start even if DB is not ready
+        print(f"Warning: Could not create tables on startup: {e}")
+        print("Tables may need to be created manually or database connection may need to be configured.")
     yield
     # Shutdown: Add any cleanup code here if needed
 
@@ -62,7 +64,7 @@ def health_check():
 @app.get("/health/db")
 def health_check_db():
     """Database health check endpoint"""
-    from core.database import engine
+    from app.core.database import engine
     from sqlalchemy import text
     try:
         with engine.connect() as conn:
@@ -72,7 +74,7 @@ def health_check_db():
         return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
 
 # Register routers
-from routers import trainer_routes, admin_routes, member_routes
+from app.routers import trainer_routes, admin_routes, member_routes
 
 # Trainer routes
 app.include_router(trainer_routes.router, prefix="/api")
